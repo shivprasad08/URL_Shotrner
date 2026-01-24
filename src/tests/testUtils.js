@@ -56,11 +56,19 @@ async function clearDatabase() {
  */
 async function createTestUrl(overrides = {}) {
   const URLMapping = require('../models/URLMapping');
-  const defaults = {
+  
+  // If expiresAt is provided and in the past, set createdAt to be before it
+  let defaults = {
     originalUrl: 'https://www.example.com/very/long/url/path',
     shortCode: 'test123',
     clickCount: 0,
   };
+  
+  if (overrides.expiresAt) {
+    const createdAtTime = new Date(overrides.expiresAt.getTime() - 86400000); // 1 day before expiresAt
+    defaults.createdAt = createdAtTime;
+  }
+  
   return new URLMapping({ ...defaults, ...overrides }).save();
 }
 

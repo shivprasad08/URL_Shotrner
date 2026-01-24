@@ -5,9 +5,9 @@
 
 const request = require('supertest');
 const mongoose = require('mongoose');
-const createApp = require('../../app');
-const { connectTestDB, disconnectTestDB, clearDatabase, createTestUrl } = require('../testUtils');
-const URLMapping = require('../../models/URLMapping');
+const createApp = require('../app');
+const { connectTestDB, disconnectTestDB, clearDatabase, createTestUrl } = require('./testUtils');
+const URLMapping = require('../models/URLMapping');
 
 describe('URL Controller', () => {
   let app;

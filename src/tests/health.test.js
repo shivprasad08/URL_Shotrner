@@ -4,8 +4,8 @@
  */
 
 const request = require('supertest');
-const createApp = require('../../app');
-const { connectTestDB, disconnectTestDB } = require('../testUtils');
+const createApp = require('../app');
+const { connectTestDB, disconnectTestDB } = require('./testUtils');
 
 describe('Health Check Controller', () => {
   let app;

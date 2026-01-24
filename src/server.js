@@ -5,7 +5,7 @@
 
 require('dotenv').config();
 
-const app = require('./app');
+const createApp = require('./app');
 const { connectDB } = require('./config/database');
 const config = require('./config/environment');
 const logger = require('./utils/logger');
@@ -18,7 +18,8 @@ async function startServer() {
     // Connect to MongoDB
     await connectDB();
 
-    // Start HTTP server
+    // Create and start HTTP server
+    const app = createApp();
     const server = app.listen(config.port, () => {
       logger.info('🚀 Server started successfully', {
         port: config.port,

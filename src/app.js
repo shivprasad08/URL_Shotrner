@@ -53,10 +53,8 @@ function createApp() {
   app.use(rateLimit());
 
   // ==================== API Routes ====================
-  // Health check - no rate limiting needed
-  app.use('/', healthRoutes);
-
-  // API v1 routes
+  // Health check and API v1 routes
+  app.use('/api', healthRoutes);
   app.use('/api', urlRoutes);
   app.use('/api/analytics', analyticsRoutes);
 
