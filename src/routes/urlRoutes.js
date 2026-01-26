@@ -33,4 +33,10 @@ router.get('/urls', asyncHandler(urlController.getAllUrls));
  */
 router.delete('/urls/:shortCode', asyncHandler(urlController.deleteUrl));
 
+/**
+ * DELETE /api/reset
+ * Clear database (dev only)
+ */
+router.delete('/reset', asyncHandler(urlController.resetDatabase));
+
 module.exports = router;

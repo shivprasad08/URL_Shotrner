@@ -18,10 +18,13 @@ const URLList = () => {
     setError('');
     try {
       const response = await axios.get('/api/urls', { params: { page, limit: 10 } });
-      const urlsData = response.data?.data?.urls || [];
+      console.log('📥 API Response:', response.data);
+      const urlsData = response.data?.data || [];
+      console.log('🔗 URLs Data:', urlsData);
       setUrls(Array.isArray(urlsData) ? urlsData : []);
       setHasMore(urlsData.length === 10);
     } catch (err) {
+      console.error('❌ Error fetching URLs:', err);
       setError('Failed to fetch URLs');
       setUrls([]);
     } finally {

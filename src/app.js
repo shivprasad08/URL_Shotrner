@@ -6,6 +6,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
 
 const config = require('./config/environment');
 const logger = require('./utils/logger');
@@ -57,6 +58,10 @@ function createApp() {
   app.use('/api', healthRoutes);
   app.use('/api', urlRoutes);
   app.use('/api/analytics', analyticsRoutes);
+
+  // ==================== Serve React Frontend ====================
+  // Serve static files from React build
+  app.use(express.static(path.join(__dirname, '../client/build')));
 
   // Redirect routes (catch-all for short codes) - must be last
   // This handles GET /:shortCode redirects

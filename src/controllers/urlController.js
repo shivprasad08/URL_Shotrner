@@ -149,9 +149,38 @@ async function deleteUrl(req, res, next) {
   }
 }
 
+/**
+ * DELETE /api/reset (DEV ONLY)
+ * Clear all URLs from database for testing
+ */
+async function resetDatabase(req, res, next) {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        error: 'Reset not allowed in production'
+      });
+    }
+    
+    const URLMapping = require('../models/URLMapping');
+    const result = await URLMapping.deleteMany({});
+    
+    console.log('🗑️  Database cleared:', result);
+    
+    res.json({
+      success: true,
+      message: 'Database cleared',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   shortenUrl,
   redirectUrl,
   getAllUrls,
   deleteUrl,
+  resetDatabase,
 };

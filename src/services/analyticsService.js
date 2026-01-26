@@ -28,10 +28,15 @@ async function getSystemAnalytics() {
         .limit(10),
     ]);
 
+    const totalClicksCount = totalClicks[0]?.totalClicks || 0;
+    const avgClicks = totalUrls > 0 ? totalClicksCount / totalUrls : 0;
+
     return {
-      totalActiveUrls: totalUrls,
-      totalClicks: totalClicks[0]?.totalClicks || 0,
-      mostPopularUrls: mostPopular,
+      totalURLs: totalUrls,
+      totalClicks: totalClicksCount,
+      avgClicksPerURL: avgClicks,
+      activeURLs: totalUrls,
+      topURLs: mostPopular,
       recentUrls,
       timestamp: new Date(),
     };
