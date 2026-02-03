@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Link as LinkIcon, Copy, ArrowRight, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
 import { useDebounce } from '@/lib/useDebounce';
+import { useAuth } from '@/context/AuthContext';
 
 const appBase =
   typeof window === 'undefined'
@@ -12,6 +15,7 @@ const appBase =
     : process.env.NEXT_PUBLIC_APP_BASE || process.env.NEXT_PUBLIC_API_BASE || window.location.origin;
 
 export default function URLShortener() {
+  const { isAuthenticated } = useAuth();
   const [originalUrl, setOriginalUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
   const [linkName, setLinkName] = useState('');
@@ -76,6 +80,11 @@ export default function URLShortener() {
     setError('');
     setSuccess('');
 
+    if (!isAuthenticated) {
+      setError('Please sign in to shorten URLs');
+      return;
+    }
+
     if (!originalUrl.trim()) {
       setError('Please enter a URL');
       return;
@@ -129,6 +138,20 @@ export default function URLShortener() {
 
   return (
     <div className="bg-black p-6">
+      {!isAuthenticated && (
+        <div className="mb-6 rounded-lg border border-blue-500/40 bg-blue-900/20 px-4 py-3 text-sm text-blue-100 flex items-center justify-between">
+          <span>Sign in to create and manage your links.</span>
+          <div className="flex gap-2">
+            <Button asChild variant="secondary" size="sm" className="bg-blue-600 text-white hover:bg-blue-500">
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="border-blue-400 text-blue-100 hover:bg-blue-900/50">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-start">
           {/* Left Panel - Dynamic Image */}
           <motion.div

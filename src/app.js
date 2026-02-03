@@ -21,6 +21,7 @@ const urlRoutes = require('./routes/urlRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const redirectRoutes = require('./routes/redirectRoutes');
 const healthRoutes = require('./routes/healthRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 /**
  * Create and configure Express application
@@ -56,6 +57,7 @@ function createApp() {
   // ==================== API Routes ====================
   // Health check and API v1 routes
   app.use('/api', healthRoutes);
+  app.use('/api/auth', authRoutes);
   app.use('/api', urlRoutes);
   app.use('/api/analytics', analyticsRoutes);
 

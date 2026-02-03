@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Copy, Trash2, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 const appBase =
   typeof window === 'undefined'
@@ -11,6 +14,7 @@ const appBase =
     : process.env.NEXT_PUBLIC_APP_BASE || process.env.NEXT_PUBLIC_API_BASE || window.location.origin;
 
 export default function URLList() {
+  const { isAuthenticated } = useAuth();
   const [urls, setUrls] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -19,15 +23,19 @@ export default function URLList() {
   const [copied, setCopied] = useState(null);
 
   useEffect(() => {
-    fetchURLs();
+    if (isAuthenticated) {
+      fetchURLs();
+    } else {
+      setUrls([]);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  }, [page, isAuthenticated]);
 
   const fetchURLs = async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await api.get("/api/urls", { params: { page, limit: 10 } });
+      const response = await api.get("/api/urls/my-urls", { params: { page, limit: 10 } });
       const urlsData = response.data?.data || [];
       setUrls(Array.isArray(urlsData) ? urlsData : []);
       setHasMore(urlsData.length === 10);
@@ -40,14 +48,25 @@ export default function URLList() {
   };
 
   const handleDelete = async (shortCode) => {
+    if (!isAuthenticated) {
+      setError("Please log in to delete URLs");
+      return;
+    }
+    
+    console.log("Attempting to delete shortCode:", shortCode);
+    
     if (!window.confirm("Delete this shortened URL? This action cannot be undone."))
       return;
 
     try {
-      await api.delete(`/api/urls/${shortCode}`);
+      const response = await api.delete(`/api/urls/${shortCode}`);
+      console.log("Delete response:", response.data);
       setUrls(urls.filter((url) => url.shortCode !== shortCode));
+      setError(""); // Clear any previous errors
     } catch (err) {
-      setError("Failed to delete URL");
+      console.error("Delete error:", err.response?.data || err.message);
+      console.error("Full error object:", err);
+      setError(err.response?.data?.error || "Failed to delete URL");
     }
   };
 
@@ -74,6 +93,19 @@ export default function URLList() {
 
   return (
     <div className="bg-black min-h-screen p-6">
+      {!isAuthenticated && (
+        <div className="mb-6 rounded-lg border border-blue-500/40 bg-blue-900/20 px-4 py-3 text-sm text-blue-100 flex items-center justify-between">
+          <span>Sign in to view and manage your URLs.</span>
+          <div className="flex gap-2">
+            <Button asChild variant="secondary" size="sm" className="bg-blue-600 text-white hover:bg-blue-500">
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="border-blue-400 text-blue-100 hover:bg-blue-900/50">
+              <Link href="/signup">Sign up</Link>
+            </Button>
+          </div>
+        </div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

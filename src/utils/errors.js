@@ -36,6 +36,16 @@ class NotFoundError extends AppError {
 }
 
 /**
+ * 401 Unauthorized error
+ */
+class UnauthorizedError extends AppError {
+  constructor(message = 'Unauthorized') {
+    super(message, 401);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+/**
  * 409 Conflict error (e.g., duplicate short code)
  */
 class ConflictError extends AppError {
@@ -69,6 +79,7 @@ module.exports = {
   AppError,
   BadRequestError,
   NotFoundError,
+  UnauthorizedError,
   ConflictError,
   RateLimitError,
   InternalServerError,

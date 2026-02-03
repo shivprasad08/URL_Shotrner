@@ -1,46 +1,48 @@
-import React from 'react'
-import { cn } from '@/lib/utils'
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority";
 
-const buttonVariants = cva(
-    "relative group border text-foreground text-center rounded-full",
-    {
-        variants: {
-            variant: {
-                default: "bg-slate-700/30 hover:bg-slate-700/50 border-slate-600/40 text-white",
-                solid: "bg-blue-600 hover:bg-blue-700 text-white border-blue-500/50 hover:border-blue-400/50 transition-all duration-200",
-                ghost: "border-transparent bg-transparent hover:border-zinc-600 hover:bg-white/10",
-            },
-            size: {
-                default: "px-7 py-1.5 ",
-                sm: "px-4 py-0.5 ",
-                lg: "px-10 py-2.5 ",
-            },
-        },
-        defaultVariants: {
-            variant: "default",
-            size: "default",
-        },
-    }
-);
+import { cn } from "@/lib/utils"
 
-const Button = React.forwardRef(
-    ({ className, neon = true, size, variant, children, ...props }, ref) => {
-        return (
-            <button
-                className={cn(buttonVariants({ variant, size }), className)}
-                ref={ref}
-                suppressHydrationWarning
-                {...props}
-            >
-                <span className={cn("absolute h-px opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out inset-x-0 inset-y-0 bg-gradient-to-r w-3/4 mx-auto from-transparent dark:via-[#3B82F6] via-[#3B82F6] to-transparent hidden", neon && "block")} />
-                {children}
-                <span className={cn("absolute group-hover:opacity-30 transition-all duration-500 ease-in-out inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent dark:via-[#3B82F6] via-[#3B82F6] to-transparent hidden", neon && "block")} />
-            </button>
-        );
-    }
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        solid: "bg-blue-600 text-white hover:bg-blue-700 border-2 border-blue-500",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
 )
 
-Button.displayName = 'Button';
+const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "button"
+  return (
+    <Comp
+      className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
+      {...props} />
+  );
+})
+Button.displayName = "Button"
 
-export { Button, buttonVariants };
+export { Button, buttonVariants }

@@ -1,6 +1,6 @@
 # URL Shortener with Analytics 🚀
 
-A production-ready URL shortening service with comprehensive analytics, built with **Node.js, Express, MongoDB, and Jest**. This project demonstrates enterprise-grade backend engineering, SDLC best practices, and scalability patterns suitable for an engineering internship portfolio.
+A URL shortening service with analytics, built with **Node.js, Express, MongoDB, and Jest**. This project demonstrates backend engineering, modular architecture, and testing best practices with both REST API and modern React/Next.js frontends.
 
 ---
 
@@ -15,49 +15,51 @@ A production-ready URL shortening service with comprehensive analytics, built wi
 7. [Database Schema](#database-schema)
 8. [Testing Strategy](#testing-strategy)
 9. [Logging & Debugging](#logging--debugging)
-10. [Scalability & Production Considerations](#scalability--production-considerations)
-11. [SDLC Practices](#sdlc-practices)
-12. [Development Workflow](#development-workflow)
-13. [Constraints & Limitations](#constraints--limitations)
+10. [Development Workflow](#development-workflow)
+11. [Known Limitations](#known-limitations)
 
 ---
 
 ## 🎯 Overview
 
 This URL Shortener service provides:
-- **Simple URL Shortening**: Convert long URLs into short, shareable codes
-- **Automatic Tracking**: Record every access with metadata (user agent, IP, timestamp)
-- **Advanced Analytics**: Real-time insights into URL usage patterns
-- **Production Grade**: Centralized error handling, structured logging, and comprehensive testing
-
-**Target Use Case**: Engineering internship portfolio project demonstrating full-stack backend development competency.
+- **URL Shortening**: Convert long URLs into short, shareable codes with optional custom codes
+- **User Authentication**: JWT-based signup and login with bcryptjs password hashing
+- **Access Tracking**: Record every access with metadata (user agent, IP, timestamp)
+- **Analytics**: View usage trends and access statistics per URL
+- **Frontend**: Modern UI with Next.js and React components for URL management
 
 ---
 
 ## ✨ Features
 
 ### Core Functionality
-- ✅ **POST /api/shorten** - Create shortened URLs with optional custom codes
+- ✅ **POST /api/auth/signup** - User registration with email/password
+- ✅ **POST /api/auth/login** - User authentication with JWT tokens
+- ✅ **POST /api/shorten** - Create shortened URLs with optional custom codes (auth required)
 - ✅ **GET /:shortCode** - Redirect with automatic click tracking
-- ✅ **GET /api/analytics/:shortCode** - Detailed analytics per URL
-- ✅ **GET /api/analytics** - System-wide analytics dashboard
-- ✅ **DELETE /api/urls/:shortCode** - Deactivate URLs
+- ✅ **GET /api/analytics/:shortCode** - Detailed analytics per URL (auth required)
+- ✅ **GET /api/analytics** - User's URL analytics dashboard (auth required)
+- ✅ **GET /api/analytics/trends/:days** - Usage trends over time
+- ✅ **DELETE /api/urls/:shortCode** - Deactivate URLs (auth required)
+- ✅ **GET /api/urls** - List all shortened URLs
+- ✅ **GET /api/urls/my-urls** - List user's shortened URLs (auth required)
 
 ### Engineering Quality
 - ✅ **Modular Architecture** - Separation of concerns (routes, controllers, services, models)
 - ✅ **Centralized Error Handling** - Global error handler with custom error classes
 - ✅ **Structured Logging** - Winston logger with request/response tracking
-- ✅ **Input Validation** - Strict URL and parameter validation with express-validator
-- ✅ **Rate Limiting** - Built-in request throttling to prevent abuse
-- ✅ **Security Headers** - Helmet.js for HTTPS enforcement and XSS protection
+- ✅ **Input Validation** - URL and parameter validation with express-validator
+- ✅ **Rate Limiting** - In-memory request throttling to prevent abuse
+- ✅ **Security Headers** - Helmet.js for protection against common attacks
 - ✅ **Database Indexing** - Optimized queries for fast lookups
-- ✅ **Atomic Operations** - Thread-safe click count incrementation
+- ✅ **Atomic Operations** - Atomic click count incrementation
 
-### Advanced Features
-- 📊 **Analytics Tracking** - Access timestamps, user agents, IP addresses, referrers
-- 🔄 **Duplicate Detection** - Gracefully handle duplicate URL submissions
-- ⏰ **URL Expiration** - Optional TTL for temporary URLs
-- 📈 **Usage Trends** - Historical analytics over configurable time periods
+### Analytics Features
+- 📊 **Access Tracking** - Timestamps, user agents, IP addresses, referrers recorded
+- 🔄 **User Ownership** - URLs linked to authenticated users
+- ⏰ **URL Expiration** - Optional TTL (Time to Live) for temporary URLs
+- 📈 **Usage Trends** - Historical analytics over configurable time periods (up to 365 days)
 - 🏥 **Health Checks** - System status and database connectivity monitoring
 
 ---
@@ -72,9 +74,11 @@ This URL Shortener service provides:
 | **Logging** | Winston v3 |
 | **Testing** | Jest + Supertest |
 | **Validation** | express-validator |
+| **Authentication** | JWT + bcryptjs |
 | **Security** | Helmet.js, CORS |
 | **Environment** | dotenv |
-| **Code Quality** | Clean Code Principles |
+| **Frontend (Next.js)** | React 18, Next.js, Tailwind CSS |
+| **Frontend (React)** | React 18, Create React App |
 
 ---
 
@@ -87,20 +91,24 @@ This URL Shortener service provides:
     ├── database.js        # MongoDB connection setup
     └── environment.js     # Environment variable management
   /controllers
-    ├── urlController.js   # URL shortening & retrieval logic
+    ├── authController.js       # Auth endpoints (signup/login)
+    ├── urlController.js        # URL shortening & retrieval logic
     ├── analyticsController.js  # Analytics endpoints
     └── healthController.js     # Health check endpoints
   /routes
-    ├── urlRoutes.js       # POST /api/shorten, GET /api/urls
+    ├── authRoutes.js      # POST /api/auth/signup, /login
+    ├── urlRoutes.js       # POST /api/shorten, GET /api/urls, DELETE
     ├── analyticsRoutes.js # GET /api/analytics endpoints
     ├── redirectRoutes.js  # GET /:shortCode redirects
     └── healthRoutes.js    # GET /api/health
   /models
+    ├── User.js            # User schema with authentication
     └── URLMapping.js      # MongoDB schema with analytics
   /services
     ├── urlService.js      # Business logic for URL shortening
     └── analyticsService.js # Analytics aggregation logic
   /middlewares
+    ├── authMiddleware.js  # JWT token verification
     ├── errorHandler.js    # Global error handling
     ├── logging.js         # Request logging & security headers
     └── rateLimit.js       # Rate limiting middleware
@@ -117,12 +125,12 @@ This URL Shortener service provides:
     └── health.test.js     # Health check tests
   app.js                    # Express app configuration
   server.js                 # Server entry point & startup
+/client                     # React frontend (Create React App)
+/client-next                # Next.js modern frontend
 /package.json               # Dependencies & scripts
 /jest.config.js             # Jest testing configuration
 /.env                       # Environment variables (local)
 /.env.example               # Environment template
-/.gitignore                 # Git ignore rules
-/README.md                  # This file
 ```
 
 ### Architecture Diagram
@@ -153,43 +161,49 @@ This URL Shortener service provides:
                          ▼
           ┌───────────────────────────────────┐
           │    RATE LIMITING MIDDLEWARE        │
-          │  (In-memory or Redis in prod)     │
+          │  (In-memory store)                │
           └──────────────┬────────────────────┘
                          │
                          ▼
-       ┌─────────────────┴─────────────────┐
-       │                                   │
-       ▼                                   ▼
-  ┌──────────────┐            ┌──────────────────┐
-  │ ROUTE LAYER  │            │ ROUTE LAYER      │
-  │ /api/shorten │            │ /:shortCode      │
-  └──────┬───────┘            └────────┬─────────┘
-         │                             │
-         ▼                             ▼
-  ┌──────────────────┐      ┌──────────────────┐
-  │ VALIDATION LAYER │      │ URL SERVICE      │
-  │  - URL format    │      │ - Track access   │
-  │  - Custom code   │      │ - Increment count│
-  └──────┬───────────┘      └────────┬─────────┘
-         │                           │
-         ▼                           ▼
-  ┌──────────────────────────────────────────┐
-  │         CONTROLLER LAYER                 │
-  │  - Business logic orchestration          │
-  │  - Response formatting                   │
-  └──────┬───────────────────────────────────┘
-         │
-         ▼
-  ┌──────────────────────────────────────────┐
-  │         SERVICE LAYER                    │
-  │  - Core business logic                   │
-  │  - Database operations                   │
-  │  - Analytics calculations                │
-  └──────┬───────────────────────────────────┘
-         │
-         ▼
-  ┌──────────────────────────────────────────┐
-  │         DATA LAYER (Mongoose)            │
+          ┌───────────────────────────────────┐
+          │   JWT AUTH MIDDLEWARE (optional)   │
+          │  - Token verification             │
+          └──────────────┬────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         │               │               │
+         ▼               ▼               ▼
+    ┌─────────┐  ┌──────────────┐  ┌──────────┐
+    │ Auth    │  │ URL Routes   │  │Analytics │
+    │Routes  │  │              │  │Routes   │
+    └────┬────┘  └──────┬───────┘  └────┬─────┘
+         │               │                │
+         ▼               ▼                ▼
+    ┌─────────────────────────────────────────┐
+    │      CONTROLLER LAYER                   │
+    │ - Business logic orchestration          │
+    │ - Response formatting                   │
+    └──────┬───────────────────────────────────┘
+           │
+           ▼
+    ┌──────────────────────────────────────────┐
+    │         SERVICE LAYER                    │
+    │  - Core business logic                   │
+    │  - Database operations                   │
+    │  - Analytics calculations                │
+    └──────┬───────────────────────────────────┘
+           │
+           ▼
+    ┌──────────────────────────────────────────┐
+    │      DATA LAYER (Mongoose)               │
+    │  - User & URL schemas with validation    │
+    │  - Indexes for performance               │
+    └──────┬───────────────────────────────────┘
+           │
+           ▼
+    ┌──────────────────────────────────────────┐
+    │         MONGODB DATABASE                 │
+    │  - Collections with compound indexes     │
   │  - URL Schema with analytics             │
   │  - Indexes for performance               │
   └──────┬───────────────────────────────────┘
@@ -241,7 +255,7 @@ Redirect 302 to original URL
 - **MongoDB** v4.0+ (local or cloud instance like MongoDB Atlas)
 - **Git** for version control
 
-### Installation Steps
+### Backend Installation
 
 1. **Clone the repository**
    ```bash
@@ -260,15 +274,16 @@ Redirect 302 to original URL
    cp .env.example .env
    
    # Edit .env with your settings
-   nano .env
    ```
 
-   **Key environment variables:**
+   **Required environment variables:**
    ```
    NODE_ENV=development
    PORT=3000
    APP_URL=http://localhost:3000
    MONGODB_URI=mongodb://localhost:27017/url-shortener
+   JWT_SECRET=your-secret-key-here
+   JWT_EXPIRES_IN=7d
    LOG_LEVEL=debug
    SHORT_CODE_LENGTH=6
    ```
@@ -293,18 +308,93 @@ Redirect 302 to original URL
    npm test
    ```
 
+### Frontend Installation (Optional)
+
+**Next.js Frontend (Recommended):**
+```bash
+cd client-next
+npm install
+npm run dev
+```
+
+**React Frontend:**
+```bash
+cd client
+npm install
+npm start
+```
+
 ---
 
 ## 📡 API Documentation
 
-### Base URL
+### Authentication
+Most endpoints require JWT authentication via the `Authorization` header:
 ```
-http://localhost:3000
+Authorization: Bearer <your-jwt-token>
 ```
 
-### 1. Create Shortened URL
+### 1. User Signup
+
+**Endpoint:** `POST /api/auth/signup`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "secure-password-min-8-chars"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": "user_id",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+
+---
+
+### 2. User Login
+
+**Endpoint:** `POST /api/auth/login`
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "secure-password-min-8-chars"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": "user_id",
+      "email": "user@example.com"
+    }
+  }
+}
+```
+
+---
+
+### 3. Create Shortened URL
 
 **Endpoint:** `POST /api/shorten`
+
+**Authentication:** Required (JWT token)
 
 **Request Body:**
 ```json
@@ -332,10 +422,11 @@ http://localhost:3000
 **Error Cases:**
 - `400 Bad Request` - Invalid URL format or validation failed
 - `409 Conflict` - Custom code already exists
+- `401 Unauthorized` - Missing or invalid token
 
 ---
 
-### 2. Redirect to Original URL
+### 4. Redirect to Original URL
 
 **Endpoint:** `GET /:shortCode`
 
@@ -355,9 +446,11 @@ http://localhost:3000
 
 ---
 
-### 3. Get URL-Specific Analytics
+### 5. Get URL-Specific Analytics
 
 **Endpoint:** `GET /api/analytics/:shortCode`
+
+**Authentication:** Required (JWT token)
 
 **Response (200 OK):**
 ```json
@@ -390,16 +483,18 @@ http://localhost:3000
 
 ---
 
-### 4. Get System Analytics
+### 6. Get User Analytics Dashboard
 
 **Endpoint:** `GET /api/analytics`
+
+**Authentication:** Required (JWT token)
 
 **Response (200 OK):**
 ```json
 {
   "success": true,
   "data": {
-    "totalActiveUrls": 1523,
+    "userUrls": 15,
     "totalClicks": 45230,
     "mostPopularUrls": [
       {
@@ -422,7 +517,7 @@ http://localhost:3000
 
 ---
 
-### 5. Get Usage Trends
+### 7. Get Usage Trends
 
 **Endpoint:** `GET /api/analytics/trends/:days`
 
@@ -441,11 +536,6 @@ http://localhost:3000
         "_id": "2026-01-10",
         "count": 45,
         "totalClicks": 320
-      },
-      {
-        "_id": "2026-01-11",
-        "count": 52,
-        "totalClicks": 410
       }
     ]
   }
@@ -454,9 +544,56 @@ http://localhost:3000
 
 ---
 
-### 6. Deactivate URL
+### 8. List All Shortened URLs
+
+**Endpoint:** `GET /api/urls`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "shortCode": "abc123",
+      "originalUrl": "https://www.example.com",
+      "clickCount": 100,
+      "createdAt": "2026-01-24T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 9. List User's Shortened URLs
+
+**Endpoint:** `GET /api/urls/my-urls`
+
+**Authentication:** Required (JWT token)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "shortCode": "abc123",
+      "originalUrl": "https://www.example.com",
+      "clickCount": 100,
+      "createdAt": "2026-01-24T10:30:00Z",
+      "userId": "user_id"
+    }
+  ]
+}
+```
+
+---
+
+### 10. Deactivate URL
 
 **Endpoint:** `DELETE /api/urls/:shortCode`
+
+**Authentication:** Required (JWT token)
 
 **Response (200 OK):**
 ```json
@@ -472,7 +609,7 @@ http://localhost:3000
 
 ---
 
-### 7. Health Check
+### 11. Health Check
 
 **Endpoint:** `GET /api/health`
 
@@ -497,15 +634,30 @@ http://localhost:3000
 
 ## 📊 Database Schema
 
+### User Collection
+
+```javascript
+{
+  // Authentication
+  email: String,               // Required, unique, indexed
+  password: String,            // Required, hashed with bcryptjs
+  
+  // Timestamps
+  createdAt: Date,             // Auto-generated
+  updatedAt: Date              // Auto-updated
+}
+```
+
 ### URLMapping Collection
 
 ```javascript
 {
   // Core URL mapping
-  originalUrl: String,         // Required, unique per record
+  originalUrl: String,         // Required, unique per user
   shortCode: String,           // Required, unique, indexed
   
-  // Metadata
+  // Owner and metadata
+  userId: ObjectId,            // Reference to User, indexed
   createdBy: String,           // Optional - user identifier
   description: String,         // Optional - custom description
   isActive: Boolean,           // Default: true
@@ -532,16 +684,20 @@ http://localhost:3000
 ### Database Indexes
 
 ```javascript
-// Primary lookup
-{ shortCode: 1 }                          // Unique
-{ originalUrl: 1 }                        // Unique per active record
-{ shortCode: 1, isActive: 1 }            // Compound for filtering
+// User lookups
+{ email: 1 }                               // Unique
+
+// Primary URL lookup
+{ shortCode: 1 }                           // Unique
+{ originalUrl: 1 }                         // Lookups
+{ userId: 1, shortCode: 1 }               // Compound for user URLs
 
 // Analytics queries
-{ clickCount: -1 }                        // Popular URLs
-{ createdAt: -1 }                         // Recent URLs
-{ lastAccessedAt: -1 }                    // Recently accessed
-{ analytics.timestamp: 1 }                // Time-series
+{ clickCount: -1 }                         // Popular URLs
+{ createdAt: -1 }                          // Recent URLs
+{ lastAccessedAt: -1 }                     // Recently accessed
+{ analytics.timestamp: 1 }                 // Time-series
+{ isActive: 1 }                            // Active URL filtering
 ```
 
 ---
@@ -612,14 +768,14 @@ makeRequest()        // Create supertest request object
 
 ### Winston Logger Configuration
 
-The application uses **Winston v3** for structured logging with multiple transports:
+The application uses **Winston v3** for structured logging:
 
 ```javascript
 // File: src/utils/logger.js
 const logger = require('./utils/logger');
 
 // Log levels: error, warn, info, debug
-logger.error('Database error', { error: error.message, stack: error.stack });
+logger.error('Database error', { error: error.message });
 logger.warn('Rate limit exceeded', { ip, count });
 logger.info('Short URL created', { shortCode, originalUrl });
 logger.debug('Request received', { method, path, duration });
@@ -634,10 +790,6 @@ logger.debug('Request received', { method, path, duration });
 2026-01-24 16:30:47 [debug]: Request completed { duration: 45ms, statusCode: 201 }
 ```
 
-**File Output (Production):**
-- `logs/app.log` - All application logs (JSON format)
-- `logs/error.log` - Error-level logs only
-
 ### Debugging Best Practices
 
 1. **Set LOG_LEVEL in .env**
@@ -651,296 +803,24 @@ logger.debug('Request received', { method, path, duration });
    # Then open chrome://inspect in Chrome
    ```
 
-3. **Enable Debug Mode**
-   ```bash
-   DEBUG=* npm run dev
-   ```
-
-4. **Request Tracking**
-   - All requests logged with:
-     - HTTP method & path
-     - Response status code
-     - Duration in milliseconds
-     - Client IP address
-     - User agent
+3. **Request Tracking**
+   - All requests logged with HTTP method, path, status code, duration, and IP address
 
 ---
 
-## 📈 Scalability & Production Considerations
-
-### Current Implementation (Development)
-
-- ✅ **In-Memory Rate Limiting** - Simple HashMap for request throttling
-- ✅ **Single MongoDB Connection** - Suitable for < 10K requests/day
-- ✅ **Synchronous Error Handling** - Centralized with middleware
-- ✅ **Local File Logging** - JSON format for easy parsing
-
-### Scaling to Production
-
-#### 1. **Database Scaling**
-```
-Current: Single MongoDB instance
-Production: MongoDB Atlas with:
-  - Replica set (3 nodes) for HA
-  - Read replicas for analytics queries
-  - Automatic failover & backup
-  - VPC peering for security
-```
-
-#### 2. **Caching Layer**
-```
-Add Redis for:
-  - Session/rate limit cache
-  - URL lookup cache (LRU)
-  - Popular URLs hot storage
-  - Reduce DB queries by 70%
-
-Implementation:
-  const cache = new RedisCache();
-  const url = await cache.getOrFetch(shortCode, () =>
-    URLMapping.findByShortCode(shortCode)
-  );
-```
-
-#### 3. **API Rate Limiting**
-```
-Production alternative: Redis + sliding window
-  - npm install redis express-rate-limit-redis
-  - Distributed rate limiting across instances
-  - Per-user/API-key limits
-```
-
-#### 4. **Message Queue**
-```
-Use Redis Pub/Sub or RabbitMQ for:
-  - Async analytics processing
-  - Deferred URL expiration cleanup
-  - Event streaming to data warehouse
-
-Implementation:
-  // Current: Synchronous
-  urlMapping.clickCount += 1;
-  
-  // Production: Async via queue
-  await analyticsQueue.enqueue({
-    type: 'URL_ACCESSED',
-    shortCode, userAgent, ipAddress
-  });
-```
-
-#### 5. **Horizontal Scaling**
-```
-Load Balancer (Nginx)
-    ↓
-  ┌─────────┬─────────┬─────────┐
-  ↓         ↓         ↓         ↓
-Instance1 Instance2 Instance3 Instance4
-  ↓         ↓         ↓         ↓
-  └─────────┴─────────┴─────────┘
-            ↓
-  Shared MongoDB + Redis
-```
-
-**Implementation:**
-- Deploy with Docker containers
-- Use Kubernetes orchestration
-- Session affinity not needed (stateless)
-- Each instance: 500MB RAM, 1 CPU core
-
-#### 6. **Database Optimization**
-```javascript
-// Add TTL index for automatic expiration cleanup
-urlMappingSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-// Batch analytics insertion (reduce writes)
-// Instead of pushing each access, batch every 10 seconds
-const analyticsBatch = [];
-setInterval(async () => {
-  if (analyticsBatch.length > 0) {
-    await URLMapping.updateMany(
-      { _id: { $in: batchIds } },
-      { $push: { analytics: { $each: analyticsBatch } } }
-    );
-    analyticsBatch.length = 0;
-  }
-}, 10000);
-```
-
-#### 7. **Monitoring & Observability**
-```
-Add to production stack:
-  - Prometheus for metrics
-  - ELK Stack (Elasticsearch, Logstash, Kibana) for logs
-  - Sentry for error tracking
-  - DataDog or New Relic for APM
-
-Metrics to track:
-  - Request latency (p50, p95, p99)
-  - Error rate by endpoint
-  - Click tracking throughput
-  - Database connection pool usage
-  - Memory & CPU per instance
-```
-
-### Performance Benchmarks
-
-**Single Instance (Current)**
-- Throughput: ~1,000 requests/second
-- URL Creation: 45ms avg (DB write)
-- Redirect: 15ms avg (DB read + atomic update)
-- Analytics Query: 200ms avg (aggregation)
-
-**With Caching (Production)**
-- Redirect (cached): 2ms avg
-- Expected improvement: 8x faster for popular URLs
-
-### Estimated Capacity
-
-| Scale | Daily Requests | Implementation |
-|-------|---|---|
-| MVP | 10K | Single instance + MongoDB |
-| Startup | 1M | 3-5 instances + Redis cache |
-| Scale | 100M+ | K8s cluster + Sharding |
-
----
-
-## 📋 SDLC Practices
-
-### 1. **Version Control** (Git)
-
-```bash
-# Initialize repository
-git init
-git add .
-git commit -m "Initial commit: URL shortener service"
-
-# Branching strategy
-git checkout -b feature/custom-codes
-git checkout -b bugfix/rate-limit-issue
-git checkout -b release/v1.0.0
-
-# Commit message format
-[FEATURE] Add custom short code support
-[BUGFIX] Fix click count race condition
-[DOCS] Update API documentation
-```
-
-### 2. **Code Quality**
-
-**Naming Conventions:**
-- Controllers: PascalCase with `Controller` suffix
-- Functions: camelCase, descriptive names
-- Constants: SCREAMING_SNAKE_CASE
-- Variables: camelCase
-
-**Comment Standards:**
-```javascript
-/**
- * Create a new shortened URL with optional custom code
- * @param {string} originalUrl - The original long URL
- * @param {Object} options - Configuration options
- * @returns {Promise<Object>} Created URL mapping
- * @throws {ConflictError} If custom code already exists
- */
-async function createShortUrl(originalUrl, options = {}) {
-  // Implementation...
-}
-```
-
-### 3. **Error Handling**
-
-- All errors caught at controller level
-- Wrapped in custom AppError classes
-- Centralized error handler middleware
-- Error logging with stack traces
-- User-friendly error messages
-
-### 4. **Security Best Practices**
-
-```javascript
-// Input validation
-const url = req.body.url.trim().toLowerCase();
-if (!isValidUrl(url)) throw new BadRequestError('Invalid URL');
-
-// SQL/NoSQL injection prevention (via Mongoose)
-const url = await URLMapping.findOne({ shortCode });
-
-// Rate limiting
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
-
-// CORS & CSRF protection
-app.use(cors());
-app.use(helmet());
-```
-
-### 5. **Testing & CI/CD**
-
-**Pre-commit Testing:**
-```bash
-npm test        # Run all tests
-npm run test:coverage  # Verify coverage
-```
-
-**Recommended CI/CD Pipeline:**
-```yaml
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-      - run: npm install
-      - run: npm test -- --coverage
-      - run: npm run lint
-```
-
-### 6. **Documentation**
-
-- ✅ Code comments for complex logic
-- ✅ API documentation (this README)
-- ✅ Setup instructions
-- ✅ Architecture diagrams
-- ✅ Deployment guide
-
----
-
-## 👨‍💻 Development Workflow
-
-### Daily Development
-
-```bash
-# 1. Create feature branch
-git checkout -b feature/new-feature
-
-# 2. Start development server
-npm run dev
-
-# 3. Make changes & test
-npm test
-
-# 4. Commit changes
-git add .
-git commit -m "[FEATURE] Implement new feature"
-
-# 5. Push & create PR
-git push origin feature/new-feature
-```
+## �‍💻 Development Workflow
 
 ### Running the Application
 
 ```bash
-# Development mode (auto-reload)
+# Development mode (auto-reload with nodemon)
 npm run dev
 
 # Production mode
 NODE_ENV=production npm start
 
 # With custom port
-PORT=8080 npm start
+PORT=8080 npm run dev
 
 # With debug logging
 LOG_LEVEL=debug npm run dev
@@ -953,11 +833,13 @@ LOG_LEVEL=debug npm run dev
 curl http://localhost:3000/api/urls
 
 # Get analytics for a URL
-curl http://localhost:3000/api/analytics/abc123
+curl http://localhost:3000/api/analytics/abc123 \
+  -H "Authorization: Bearer <your-jwt-token>"
 
 # Create a short URL
 curl -X POST http://localhost:3000/api/shorten \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-jwt-token>" \
   -d '{"url":"https://www.example.com"}'
 
 # Check system health
@@ -966,66 +848,47 @@ curl http://localhost:3000/api/health
 
 ---
 
-## ⚠️ Constraints & Limitations
+## ⚠️ Known Limitations
 
-### Current Limitations
+### Current Constraints
 
 1. **Rate Limiting Storage**
    - In-memory only (not persistent across server restarts)
    - Not shared across multiple instances
-   - **Solution**: Implement Redis-backed rate limiting in production
+   - Solution: Use Redis in production for distributed rate limiting
 
 2. **Short Code Generation**
    - Currently 6 characters, allowing ~2.2 billion combinations
-   - Deterministic collision checking adds latency
-   - **Solution**: Pre-generate short codes with async allocation queue
+   - Collision checking adds latency with high volume
+   - Solution: Pre-generate short codes asynchronously
 
 3. **Analytics Storage**
-   - All analytics stored in single document array
-   - Could exceed MongoDB 16MB document size limit at scale
-   - **Solution**: Implement document sharding or separate analytics collection
+   - All analytics stored in a single document array within URLMapping
+   - Could exceed MongoDB 16MB document size limit at extreme scale
+   - Solution: Implement separate analytics collection or document sharding
 
-4. **Concurrent Updates**
-   - Click count increments use atomic operations (safe)
-   - Analytics array pushes are not atomic with count increment
-   - **Solution**: Use transactions (MongoDB 4.0+) for multi-operation atomicity
+4. **Authentication**
+   - JWT-based with no refresh token rotation
+   - No password reset functionality
+   - Solution: Add refresh tokens and password recovery endpoints
 
-5. **Database Connection**
-   - Single connection pool per instance
-   - No automatic connection pooling optimization
-   - **Solution**: Implement connection pool with PgBouncer or similar
+5. **Frontend Integration**
+   - React and Next.js frontends are separate from API
+   - No real-time updates (polling not implemented)
+   - Solution: Implement WebSocket support for real-time analytics
 
 ### Design Trade-offs
 
-| Feature | Decision | Trade-off |
-|---------|----------|-----------|
-| Short Code Length | 6 chars | Balance between uniqueness & URL length |
+| Feature | Current Decision | Trade-off |
+|---------|---|---|
+| Short Code Length | 6 characters | Balance between uniqueness & URL length |
 | Analytics Storage | Embedded array | Fast access vs. document size limit |
-| Rate Limiting | In-memory | Simple implementation vs. not distributed |
-| Error Handling | Centralized | Cleaner code vs. custom per-endpoint handlers |
-
-### Known Issues
-
-- None at initial release
-
-### Future Improvements
-
-- [ ] Implement Redis caching layer
-- [ ] Add MongoDB transactions for multi-doc updates
-- [ ] Implement gzip compression for responses
-- [ ] Add API key authentication
-- [ ] Create admin dashboard frontend
-- [ ] Implement webhook notifications for analytics
-- [ ] Add QR code generation
-- [ ] Support URL redirects with parameters
-- [ ] Implement batching for analytics writes
-- [ ] Add geolocation tracking for clicks
+| Rate Limiting | In-memory store | Simple implementation vs. not distributed |
+| Auth | JWT only | Simple implementation vs. no refresh tokens |
 
 ---
 
-## 📞 Support & Questions
-
-### Troubleshooting
+## 📞 Troubleshooting
 
 **MongoDB Connection Failed**
 ```bash
@@ -1038,7 +901,7 @@ MONGODB_URI=mongodb://localhost:27017/url-shortener
 
 **Port Already in Use**
 ```bash
-# Kill process on port 3000
+# Kill process on port 3000 (Unix/Linux/Mac)
 lsof -ti:3000 | xargs kill -9
 
 # Or use different port
@@ -1048,48 +911,18 @@ PORT=3001 npm run dev
 **Tests Failing**
 ```bash
 # Clear test database
-mongo url-shortener-test --eval "db.dropDatabase()"
+mongosh url-shortener-test --eval "db.dropDatabase()"
 
 # Rerun tests
 npm test
 ```
 
----
-
-## 📄 License
-
-This project is provided as-is for educational and portfolio purposes.
-
----
-
-## 🎓 Learning Outcomes
-
-This project demonstrates:
-
-✅ **Backend Development**
-- RESTful API design principles
-- Express.js middleware pattern
-- Asynchronous JavaScript (async/await, Promises)
-- MongoDB modeling and querying
-
-✅ **Software Engineering**
-- Modular architecture & separation of concerns
-- Error handling & validation strategies
-- Logging & debugging practices
-- Security best practices
-
-✅ **Testing & Quality**
-- Unit & integration testing with Jest
-- API testing with Supertest
-- Test isolation & database cleanup
-- Coverage-driven development
-
-✅ **Scalability & Production**
-- Database indexing for performance
-- Rate limiting & throttling
-- Caching strategies
-- Horizontal scaling architecture
+**Auth Endpoint Issues**
+```
+Make sure JWT_SECRET is set in .env file before starting server
+JWT_SECRET=your-secret-key-here
+```
 
 ---
 
-**Built with ❤️ for learning and portfolio showcase**
+**Built with ❤️ for learning and backend engineering**

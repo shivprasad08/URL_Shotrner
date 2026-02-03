@@ -42,6 +42,7 @@ async function shortenUrl(req, res, next) {
       description,
       expiresAt: expiration,
       createdBy: req.ip,
+      userId: req.user?.id || null,
     });
 
     const shortUrl = `${process.env.APP_URL || 'http://localhost:3000'}/${result.shortCode}`;
@@ -123,6 +124,36 @@ async function getAllUrls(req, res, next) {
 }
 
 /**
+ * GET /api/urls/my-urls
+ * Get URLs for logged in user
+ */
+async function getMyUrls(req, res, next) {
+  try {
+    const page = parseInt(req.query.page || '1', 10);
+    const limit = parseInt(req.query.limit || '50', 10);
+    const skip = (page - 1) * limit;
+
+    const [urls, total] = await Promise.all([
+      require('../models/URLMapping')
+        .find({ userId: req.user.id, isActive: true })
+        .select('shortCode originalUrl description clickCount createdAt isActive')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      require('../models/URLMapping').countDocuments({ userId: req.user.id, isActive: true }),
+    ]);
+
+    res.json({
+      success: true,
+      data: urls,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * DELETE /api/urls/:shortCode
  * Deactivate a shortened URL
  */
@@ -130,18 +161,18 @@ async function deleteUrl(req, res, next) {
   try {
     const { shortCode } = req.params;
 
-    logger.debug('Delete request received', { shortCode });
+    logger.debug('Delete request received', { shortCode, userId: req.user?.id });
 
-    const result = await urlService.deleteShortUrl(shortCode);
+    const result = await urlService.deleteShortUrl(shortCode, req.user.id);
 
     logger.info('Short URL deleted', { shortCode });
 
     res.json({
       success: true,
-      message: 'Short URL deactivated successfully',
+      message: 'Short URL deleted successfully',
       data: {
         shortCode: result.shortCode,
-        deactivatedAt: result.updatedAt,
+        deletedAt: result.deletedAt,
       },
     });
   } catch (error) {
@@ -181,6 +212,7 @@ module.exports = {
   shortenUrl,
   redirectUrl,
   getAllUrls,
+  getMyUrls,
   deleteUrl,
   resetDatabase,
 };

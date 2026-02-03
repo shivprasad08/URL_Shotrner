@@ -7,6 +7,7 @@ const URLMapping = require('../models/URLMapping');
 const logger = require('../utils/logger');
 const { generateShortCode } = require('../utils/shortCodeGenerator');
 const { NotFoundError, ConflictError, BadRequestError } = require('../utils/errors');
+const mongoose = require('mongoose');
 
 /**
  * Create a new shortened URL
@@ -16,6 +17,7 @@ const { NotFoundError, ConflictError, BadRequestError } = require('../utils/erro
  * @param {string} options.description - Optional description
  * @param {Date} options.expiresAt - Optional expiration date
  * @param {string} options.createdBy - Optional user identifier
+ * @param {string} options.userId - Optional owner user id
  * @returns {Object} Created URL mapping
  */
 async function createShortUrl(originalUrl, options = {}) {
@@ -58,6 +60,7 @@ async function createShortUrl(originalUrl, options = {}) {
       description: options.description || null,
       expiresAt: options.expiresAt || null,
       createdBy: options.createdBy || null,
+      userId: options.userId || null,
       isActive: true,
     });
 
@@ -208,21 +211,49 @@ function getTopItems(analytics, field, limit) {
 /**
  * Delete/deactivate a short URL
  * @param {string} shortCode - The short code to delete
+ * @param {string} userId - The user ID to verify ownership
  * @returns {Object} Deleted URL mapping
  */
-async function deleteShortUrl(shortCode) {
-  const urlMapping = await URLMapping.findOneAndUpdate(
-    { shortCode, isActive: true },
-    { isActive: false, updatedAt: new Date() },
-    { new: true }
-  );
-
+async function deleteShortUrl(shortCode, userId) {
+  logger.debug('Delete URL request', { shortCode, userId });
+  
+  // Find the URL
+  const urlMapping = await URLMapping.findOne({ shortCode, isActive: true });
+  
   if (!urlMapping) {
+    logger.warn('Short URL not found or inactive', { shortCode });
     throw new NotFoundError('Short URL not found');
   }
-
-  logger.info('Short URL deactivated', { shortCode });
-  return urlMapping;
+  
+  // Convert userId string to ObjectId for proper comparison
+  const mongoose = require('mongoose');
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+  
+  logger.debug('Ownership check', {
+    shortCode,
+    urlOwnerId: urlMapping.userId.toString(),
+    requestUserId: userObjectId.toString(),
+    match: urlMapping.userId.equals(userObjectId)
+  });
+  
+  // Check ownership by comparing ObjectIds
+  if (!urlMapping.userId.equals(userObjectId)) {
+    logger.warn('Unauthorized delete attempt', { 
+      shortCode, 
+      attemptedUserId: userObjectId, 
+      actualOwnerId: urlMapping.userId 
+    });
+    throw new NotFoundError('You do not have permission to delete this URL');
+  }
+  
+  // Permanently delete from database
+  await URLMapping.findByIdAndDelete(urlMapping._id);
+  
+  logger.info('Short URL permanently deleted', { shortCode, userId });
+  return { 
+    shortCode: urlMapping.shortCode,
+    deletedAt: new Date()
+  };
 }
 
 /**

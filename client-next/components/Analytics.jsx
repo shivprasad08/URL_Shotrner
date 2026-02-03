@@ -32,9 +32,11 @@ const Analytics = () => {
     setError("");
     try {
       const response = await api.get("/api/analytics");
+      console.log("Analytics response:", response.data);
       setAnalytics(response.data?.data || {});
     } catch (err) {
-      setError("Failed to fetch analytics");
+      console.error("Analytics error:", err);
+      setError(err.response?.data?.error || "Failed to fetch analytics");
       setAnalytics({});
     } finally {
       setLoading(false);
@@ -49,7 +51,14 @@ const Analytics = () => {
         {error && <div className="error-message mb-6 p-4 bg-red-900/20 border border-red-500 rounded-lg text-red-400">{error}</div>}
         {loading && <p className="text-gray-400">Loading analytics...</p>}
 
-        {analytics && (
+        {!loading && !error && (!analytics || analytics.totalURLs === 0) && (
+          <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center">
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">No Analytics Yet</h3>
+            <p className="text-gray-400">Create and share some shortened URLs to see analytics data here.</p>
+          </div>
+        )}
+
+        {analytics && analytics.totalURLs > 0 && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <StatCard 
@@ -64,7 +73,7 @@ const Analytics = () => {
                 value={analytics.totalClicks || 0} 
                 color="pink"
                 change={computeChange(analytics.totalClicks || 0, Math.max(0, (analytics.totalClicks || 0) - 1))}
-                comparison={`Vs last month: ${Math.max(0, (analytics.totalClicks || 0) - 1)}`}
+                comparison={`Total impact: ${analytics.totalClicks || 0}`}
               />
               <StatCard 
                 title="Average Clicks" 
@@ -81,7 +90,7 @@ const Analytics = () => {
                 value={analytics.activeURLs || 0} 
                 color="green"
                 change={computeChange(analytics.activeURLs || 0, Math.max(0, (analytics.activeURLs || 0) - 1))}
-                comparison={`Vs last month: ${Math.max(0, (analytics.activeURLs || 0) - 1)}`}
+                comparison={`Active links: ${analytics.activeURLs || 0}`}
               />
             </div>
 
@@ -106,33 +115,33 @@ const Analytics = () => {
               </div>
             </div>
 
-          {analytics.topURLs && analytics.topURLs.length > 0 && (
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 shadow-sm">
-              <h3 className="text-xl font-semibold text-white mb-4">Top URLs by Clicks</h3>
-              <ul className="space-y-3">
-                {analytics.topURLs.slice(0, 5).map((url, index) => (
-                  <li key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
-                    <span className="flex items-center gap-3">
-                      <span className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-full font-semibold text-sm">
-                        {index + 1}
+            {analytics.topURLs && analytics.topURLs.length > 0 && (
+              <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 shadow-sm">
+                <h3 className="text-xl font-semibold text-white mb-4">Top URLs by Clicks</h3>
+                <ul className="space-y-3">
+                  {analytics.topURLs.slice(0, 5).map((url, index) => (
+                    <li key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
+                      <span className="flex items-center gap-3">
+                        <span className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-full font-semibold text-sm">
+                          {index + 1}
+                        </span>
+                        <a
+                          className="text-blue-400 hover:text-blue-300 font-medium"
+                          href={`${appBase}/${url.shortCode}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {url.shortCode}
+                        </a>
                       </span>
-                      <a
-                        className="text-blue-400 hover:text-blue-300 font-medium"
-                        href={`${appBase}/${url.shortCode}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {url.shortCode}
-                      </a>
-                    </span>
-                    <span className="text-gray-300 font-semibold">{url.clickCount} clicks</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      )}
+                      <span className="text-gray-300 font-semibold">{url.clickCount} clicks</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

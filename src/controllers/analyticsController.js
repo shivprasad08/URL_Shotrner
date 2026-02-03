@@ -10,18 +10,18 @@ const { NotFoundError } = require('../utils/errors');
 
 /**
  * GET /api/analytics/:shortCode
- * Get detailed analytics for a specific short URL
+ * Get detailed analytics for a specific short URL (verify ownership)
  */
 async function getUrlAnalytics(req, res, next) {
   try {
     const { shortCode } = req.params;
 
-    logger.debug('Analytics request received', { shortCode });
+    logger.debug('Analytics request received', { shortCode, userId: req.user?.id });
 
-    const analytics = await analyticsService.getDetailedAnalytics(shortCode);
+    const analytics = await analyticsService.getDetailedAnalytics(shortCode, req.user.id);
 
     if (!analytics) {
-      throw new NotFoundError('Short URL not found');
+      throw new NotFoundError('Short URL not found or you do not have permission to view its analytics');
     }
 
     res.json({
@@ -35,13 +35,13 @@ async function getUrlAnalytics(req, res, next) {
 
 /**
  * GET /api/analytics
- * Get system-wide analytics
+ * Get user analytics (only their URLs)
  */
 async function getSystemAnalytics(req, res, next) {
   try {
-    logger.debug('System analytics request received');
+    logger.debug('User analytics request received', { userId: req.user?.id });
 
-    const analytics = await analyticsService.getSystemAnalytics();
+    const analytics = await analyticsService.getSystemAnalytics(req.user.id);
 
     res.json({
       success: true,

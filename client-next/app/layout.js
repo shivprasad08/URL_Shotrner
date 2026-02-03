@@ -4,6 +4,7 @@ import "./styles/app.css";
 import "./styles/urlform.css";
 import "./styles/urllist.css";
 import "./styles/analytics.css";
+import { Providers } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

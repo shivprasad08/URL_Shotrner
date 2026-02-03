@@ -30,7 +30,15 @@ const urlMappingSchema = new mongoose.Schema(
       match: [/^[a-zA-Z0-9]+$/, 'Short code must contain only alphanumeric characters'],
     },
 
-    // User who created the short URL (optional)
+    // Owner user id (reference)
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+      default: null,
+    },
+
+    // User who created the short URL (optional, ip or meta)
     createdBy: {
       type: String,
       trim: true,

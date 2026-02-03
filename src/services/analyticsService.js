@@ -7,22 +7,27 @@ const URLMapping = require('../models/URLMapping');
 const logger = require('../utils/logger');
 
 /**
- * Get overall system analytics
- * @returns {Object} System-wide analytics
+ * Get user analytics (only their URLs)
+ * @param {string} userId - User ID to filter by
+ * @returns {Object} User analytics
  */
-async function getSystemAnalytics() {
+async function getSystemAnalytics(userId) {
   try {
+    const mongoose = require('mongoose');
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const query = { isActive: true, userId: userObjectId };
+    
     const [totalUrls, totalClicks, mostPopular, recentUrls] = await Promise.all([
-      URLMapping.countDocuments({ isActive: true }),
+      URLMapping.countDocuments(query),
       URLMapping.aggregate([
-        { $match: { isActive: true } },
+        { $match: query },
         { $group: { _id: null, totalClicks: { $sum: '$clickCount' } } },
       ]),
-      URLMapping.find({ isActive: true })
+      URLMapping.find(query)
         .select('shortCode originalUrl clickCount')
         .sort({ clickCount: -1 })
         .limit(10),
-      URLMapping.find({ isActive: true })
+      URLMapping.find(query)
         .select('shortCode originalUrl createdAt clickCount')
         .sort({ createdAt: -1 })
         .limit(10),
@@ -41,7 +46,7 @@ async function getSystemAnalytics() {
       timestamp: new Date(),
     };
   } catch (error) {
-    logger.error('Failed to fetch system analytics', { error: error.message });
+    logger.error('Failed to fetch user analytics', { error: error.message });
     throw error;
   }
 }
@@ -89,12 +94,15 @@ async function getUsageTrends(days = 30) {
 /**
  * Get detailed URL analytics with full access logs
  * @param {string} shortCode - The short code
+ * @param {string} userId - User ID to verify ownership
  * @param {number} limit - Maximum number of access logs to return
  * @returns {Object} Detailed analytics
  */
-async function getDetailedAnalytics(shortCode, limit = 100) {
+async function getDetailedAnalytics(shortCode, userId, limit = 100) {
   try {
-    const urlMapping = await URLMapping.findOne({ shortCode, isActive: true });
+    const mongoose = require('mongoose');
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const urlMapping = await URLMapping.findOne({ shortCode, isActive: true, userId: userObjectId });
 
     if (!urlMapping) {
       return null;
