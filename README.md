@@ -537,6 +537,3 @@ mongosh url-shortener-test --eval "db.dropDatabase()"
 npm test
 ```
 
-**A
-
-**Built with ❤️ for learning and backend engineering**
