@@ -41,7 +41,7 @@ This URL Shortener service provides:
 - ✅ **GET /api/analytics/:shortCode** - Detailed analytics per URL (auth required)
 - ✅ **GET /api/analytics** - User's URL analytics dashboard (auth required)
 - ✅ **GET /api/analytics/trends/:days** - Usage trends over time
-- ✅ **DELETE /api/urls/:shortCode** - Deactivate URLs (auth required)
+- ✅ **DELETE /api/urls/:shortCode** - Permanently delete URLs (auth required)
 - ✅ **GET /api/urls** - List all shortened URLs
 - ✅ **GET /api/urls/my-urls** - List user's shortened URLs (auth required)
 
@@ -281,8 +281,8 @@ Redirect 302 to original URL
    NODE_ENV=development
    PORT=3000
    APP_URL=http://localhost:3000
-   MONGODB_URI=mongodb://localhost:27017/url-shortener
-   JWT_SECRET=your-secret-key-here
+   MONGODB_URI=mongodb://localhost:27017/URL_Shortner
+   JWT_SECRET=your-secret-key-here-min-32-chars-recommended
    JWT_EXPIRES_IN=7d
    LOG_LEVEL=debug
    SHORT_CODE_LENGTH=6
@@ -441,8 +441,8 @@ Authorization: Bearer <your-jwt-token>
   - Referer
 
 **Error Cases:**
-- `404 Not Found` - Short code doesn't exist or has expired
-- `410 Gone` - URL deactivated
+- `404 Not Found` - Short code doesn't exist or has been deleted
+- `410 Gone` - URL expired
 
 ---
 
@@ -589,7 +589,7 @@ Authorization: Bearer <your-jwt-token>
 
 ---
 
-### 10. Deactivate URL
+### 10. Delete URL
 
 **Endpoint:** `DELETE /api/urls/:shortCode`
 
@@ -599,10 +599,10 @@ Authorization: Bearer <your-jwt-token>
 ```json
 {
   "success": true,
-  "message": "Short URL deactivated successfully",
+  "message": "Short URL deleted successfully",
   "data": {
     "shortCode": "abc123",
-    "deactivatedAt": "2026-01-24T16:00:00Z"
+    "deletedAt": "2026-01-24T16:00:00Z"
   }
 }
 ```
@@ -658,9 +658,8 @@ Authorization: Bearer <your-jwt-token>
   
   // Owner and metadata
   userId: ObjectId,            // Reference to User, indexed
-  createdBy: String,           // Optional - user identifier
+  createdBy: String,           // Optional - user identifier (IP)
   description: String,         // Optional - custom description
-  isActive: Boolean,           // Default: true
   expiresAt: Date,             // Optional - TTL
   
   // Analytics tracking
@@ -698,7 +697,6 @@ Authorization: Bearer <your-jwt-token>
 { lastAccessedAt: -1 }                     // Recently accessed
 { analytics.timestamp: 1 }                 // Time-series
 { isActive: 1 }                            // Active URL filtering
-```
 
 ---
 
@@ -717,7 +715,7 @@ The project includes **3 main test suites** covering 40+ test cases:
 - ✅ Handle expiration
 - ✅ Deactivate URLs
 - ✅ List URLs with pagination
-
+lete URLs permanently
 #### 2. **Analytics Tests** (`analytics.test.js`)
 - ✅ Get analytics for specific URL
 - ✅ Get system-wide analytics
@@ -750,8 +748,7 @@ npm run test:watch
 - Automatic cleanup before/after each test
 - Transaction isolation for parallel test execution
 - 30-second timeout for slow database operations
-
-### Test Utilities
+30-second timeout for
 
 ```javascript
 // Helper functions in testUtils.js
@@ -866,8 +863,8 @@ curl http://localhost:3000/api/health
    - All analytics stored in a single document array within URLMapping
    - Could exceed MongoDB 16MB document size limit at extreme scale
    - Solution: Implement separate analytics collection or document sharding
-
-4. **Authentication**
+ (highly unlikely for most use cases)
+   - Solution: Implement separate analytics collection if needed
    - JWT-based with no refresh token rotation
    - No password reset functionality
    - Solution: Add refresh tokens and password recovery endpoints
@@ -875,8 +872,7 @@ curl http://localhost:3000/api/health
 5. **Frontend Integration**
    - React and Next.js frontends are separate from API
    - No real-time updates (polling not implemented)
-   - Solution: Implement WebSocket support for real-time analytics
-
+   - Solution: Implement Weclient polls data on demand)
 ### Design Trade-offs
 
 | Feature | Current Decision | Trade-off |
@@ -917,12 +913,6 @@ mongosh url-shortener-test --eval "db.dropDatabase()"
 npm test
 ```
 
-**Auth Endpoint Issues**
-```
-Make sure JWT_SECRET is set in .env file before starting server
-JWT_SECRET=your-secret-key-here
-```
-
----
+**A
 
 **Built with ❤️ for learning and backend engineering**
